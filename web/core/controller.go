@@ -1,0 +1,54 @@
+package core
+
+import (
+	"net/http"
+
+	"github.com/phper-go/frame/web/input"
+	"github.com/phper-go/frame/web/output"
+	"github.com/phper-go/frame/web/theme"
+)
+
+type Controller struct {
+	input  *input.Input
+	output *output.Output
+	theme  theme.Interface
+}
+
+func (this *Controller) Input() *input.Input {
+	return this.input
+}
+
+func (this *Controller) Output() *output.Output {
+	return this.output
+}
+
+func (this *Controller) Construct(controllerName string, actionName string) {
+
+	this.input = &input.Input{
+		Controller: controllerName,
+		Action:     actionName,
+		Request:    make(map[string]interface{}),
+		Get:        make(map[string]interface{}),
+		Post:       make(map[string]interface{}),
+		Cookie:     make(map[string]interface{}),
+		Session:    make(map[string]interface{}),
+		Header:     make(map[string]interface{}),
+		Server:     &input.Server{},
+	}
+
+	this.output = &output.Output{
+		Headers: make(map[string]string),
+		Status:  http.StatusOK,
+	}
+
+	this.theme = &theme.Theme{}
+	this.theme.Construct()
+}
+
+func (this *Controller) Prepare() bool {
+	return true
+}
+
+func (this *Controller) End() {
+
+}

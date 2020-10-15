@@ -1,0 +1,64 @@
+package form
+
+import (
+	"reflect"
+	"strings"
+
+	"github.com/phper-go/frame/ext/validator"
+	"github.com/phper-go/frame/func/object"
+	"github.com/phper-go/frame/interfaces"
+	"github.com/phper-go/frame/web/form/element"
+)
+
+type Builder struct {
+	Title    string
+	Method   string
+	Action   string
+	Target   string
+	Enctype  string
+	Elements []element.Interface
+}
+
+func (this *Builder) Construct(action string, method string) {
+	this.Action = action
+	this.Method = method
+	this.Elements = []element.Interface{}
+}
+
+func (this *Builder) Bind(obj interfaces.Api) {
+
+	mapRequireds := make(map[string]bool)
+	rules := obj.Rules()
+	for _, rule := range rules {
+		if reflect.TypeOf(rule).String() == reflect.TypeOf(&validator.Required{}).String() {
+			fields := strings.Split(rule.GetFields(), ",")
+			for _, field := range fields {
+				mapRequireds[strings.ToLower(field)] = true
+				continue
+			}
+		}
+
+	}
+
+	var errno, errmsg, field = obj.GetErrors()
+	var values = object.Values(obj)
+	for _, elem := range this.Elements {
+		var fieldVal interface{}
+		elemName := strings.ToLower(elem.Name())
+		for key, val := range values {
+			if strings.ToLower(key) == elemName {
+				fieldVal = val
+			}
+		}
+		if !(strings.ToLower(elem.Type()) == "submit" || strings.ToLower(elem.Type()) == "button") {
+			if strings.ToLower(elem.Type()) == "widget" {
+				fieldVal = obj
+			}
+			elem.Set(fieldVal, mapRequireds[elemName])
+		}
+
+		if field != "" && strings.ToLower(field) == elemName {
+			elem.SetError(errno, errmsg)
+		}
+	}
+}
