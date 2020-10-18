@@ -2,14 +2,15 @@ package commands
 
 import (
 	"github.com/phper-go/frame/web/core"
+	"github.com/phper-go/frame/web/route"
 )
 
 func init() {
 
-	if _, ok := core.ParseCommand("help"); !ok {
+	if _, ok := route.Commands["help"]; !ok {
 		core.RegisterCommand("help", &HelpCmd{})
 	}
-	if _, ok := core.ParseCommand("start"); !ok {
+	if _, ok := route.Commands["start"]; !ok {
 		core.RegisterCommand("start", &StartCmd{})
 	}
 }

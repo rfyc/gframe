@@ -10,6 +10,7 @@ import (
 	"github.com/phper-go/frame/logger"
 	_ "github.com/phper-go/frame/web/commands"
 	"github.com/phper-go/frame/web/core"
+	"github.com/phper-go/frame/web/route"
 )
 
 func Run(execApp interfaces.App, args []string) {
@@ -122,5 +123,13 @@ func parseCommand(args []string) (interfaces.Command, bool) {
 	if cmdName == "" {
 		return nil, false
 	}
-	return core.ParseCommand(cmdName)
+
+	if cmdClass, ok := route.Commands[strings.ToLower(cmdName)]; ok {
+		if execCommand, ok := object.New(cmdClass).(interfaces.Command); ok {
+			return execCommand, true
+		}
+		return nil, false
+	}
+
+	return nil, false
 }

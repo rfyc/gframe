@@ -1,19 +1,21 @@
 package route
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
+	"reflect"
 	"time"
 
+	"github.com/phper-go/frame/func/object"
+
 	"github.com/phper-go/frame/func/conv"
-
-	"github.com/phper-go/frame/logger"
-
+	"github.com/phper-go/frame/func/ip"
 	"github.com/phper-go/frame/interfaces"
+	"github.com/phper-go/frame/logger"
 )
 
 type HTTP struct {
-	DefaultAction  *string
-	Debug          *uint8
 	request        *http.Request
 	response       http.ResponseWriter
 	btime          time.Time
@@ -23,16 +25,17 @@ type HTTP struct {
 
 func (this *HTTP) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 
+	this.btime = time.Now()
 	this.request = request
 	this.response = response
 
 	if err := this.paserController(); err != nil {
-		this.write(http.StatusNotFound, "-", err.Error(), []byte{})
+		this.error(http.StatusNotFound, err)
 		return
 	}
 
 	if err := this.initController(); err != nil {
-		this.write(http.StatusBadGateway, "-", err.Error(), []byte{})
+		this.error(http.StatusBadGateway, err)
 		return
 	}
 
@@ -45,9 +48,7 @@ func (this *HTTP) ServeHTTP(response http.ResponseWriter, request *http.Request)
 	defer func() {
 		if err := recover(); err != nil {
 			// logger.Format(err).Error("run")
-			status := http.StatusInternalServerError
-			this.write(status, "-", conv.String(err), []byte{})
-			return
+			this.error(http.StatusInternalServerError, errors.New(conv.String(err)))
 		}
 		return
 	}()
@@ -64,8 +65,12 @@ func (this *HTTP) paserController() error {
 
 func (this *HTTP) runController() {
 
+	if this.execAction == "Run" {
+		object.Set(this.execController, this.execController.Input().Request)
+	}
+
 	if isok := this.execController.Prepare(); isok {
-		run := reflect.ValueOf(execController).MethodByName(execMethod)
+		run := reflect.ValueOf(this.execController).MethodByName(this.execAction)
 		run.Call([]reflect.Value{})
 	}
 }
@@ -73,19 +78,19 @@ func (this *HTTP) runController() {
 func (this *HTTP) outputController() {
 
 	//******** set status ********//
-	var size = 0
+	var output = this.execController.Output()
 	var location = conv.String(output.Headers["Location"])
-	if output.Status == http.StatusFound || output.Status == http.StatusSeeOther {
-		http.Redirect(response, request, location, output.Status)
+	if len(location) > 0 {
+		http.Redirect(this.response, this.request, location, http.StatusFound)
 	} else {
-		response.WriteHeader(output.Status)
-		size = this.writeHTTP(response, output.Content)
+		this.write(http.StatusOK, output.Status, output.Error, output.Content)
 	}
-	//******** set output ********//
-	access.HTTP(request, response, output.Status, size, output.Error)
 }
 
 func (this *HTTP) endController() {
+
+	var output = this.execController.Output()
+	var response = this.response
 
 	//******** set header ********//
 	for key, val := range output.Headers {
@@ -96,17 +101,19 @@ func (this *HTTP) endController() {
 		http.SetCookie(response, cookie)
 	}
 	//******** set session ********//
-	if err := this.writeSession(input); err != nil {
-		access.HTTP(request, response, http.StatusBadGateway, 0, "set_session_bad")
-	}
+	// if err := this.writeSession(input); err != nil {
+	// 	this.error(http.StatusBadGateway, errors.New("write session fail:"))
+	// }
 
 	this.execController.End()
 
 }
 
-func (this *HTTP) initController() {
+func (this *HTTP) initController() error {
 
 	//******** request get ********//
+	var request = this.request
+	var input = this.execController.Input()
 	for key, value := range request.URL.Query() {
 		count := len(value)
 		if count > 1 {
@@ -153,46 +160,50 @@ func (this *HTTP) initController() {
 	input.Server.IsGet = request.Method == "GET"
 	input.Server.IsAjax = len(request.Header.Get("x-requested-with")) > 0
 	input.Server.RemoteAddr = request.RemoteAddr
-	input.Server.ServerName = this.httpServerName(request)
-	input.Server.ServerPort = this.httpServerPort(request)
-	input.Server.QueryPath = this.httpQueryPath(request)
-	input.Server.QueryString = this.httpQueryString(request)
+	input.Server.ServerName = httpServerName(request)
+	input.Server.ServerPort = httpServerPort(request)
+	input.Server.QueryPath = httpQueryPath(request)
+	input.Server.QueryString = httpQueryString(request)
 	input.Server.HttpReferer = request.Referer()
 	input.Server.HttpUserAgent = request.UserAgent()
 
+	return nil
 }
 
-func (this *HTTP) write(status int, errno, errmsg, content []string) {
+func (this *HTTP) error(status int, err error) {
 
-	this.response.WriteHeader()
-	size, err := response.Write(content)
-	if err != nil {
-		logger.Format(err).Error("run")
+	if *Debug >= 1 {
+		this.write(status, "-", err.Error(), []byte(err.Error()))
+	} else {
+		this.write(status, "-", err.Error(), []byte{})
 	}
-	this.logger()
 }
 
-func (this *HTTP) debugError(err error) []byte {
+func (this *HTTP) write(status int, errno, errmsg string, content []byte) {
 
-	if *this.Debug > 0 {
-		return []byte(err.Error())
+	this.response.WriteHeader(status)
+	size, err := this.response.Write(content)
+	this.logger(status, errno, errmsg, size, err)
+}
+
+func (this *HTTP) logger(status int, errno, errmsg string, output_size int, output_err error) {
+
+	var request = this.request
+
+	logmsg := this.btime.Format("2006-01-02 15:04:05.0000") + " "
+	logmsg += "http "
+	logmsg += ip.ClientIP(request) + " "
+	logmsg += request.Method + " "
+	logmsg += fmt.Sprintf("%0.4f", time.Since(this.btime).Seconds()) + " "
+	logmsg += conv.String(status) + " "
+	logmsg += conv.String(output_size) + " "
+	if output_err == nil {
+		logmsg += " - | "
+	} else {
+		logmsg += conv.String(output_err) + " | "
 	}
-	return []byte{}
-}
-
-func (this *HTTP) logger() {
-
-	logmsg := "http^"
-	logmsg += ip.ClientIP(request) + "^"
-	logmsg += request.Method + "^"
-	logmsg += request.URL.String() + "^"
-	// logmsg += request.UserAgent() + "^"
-	logmsg += conv.String(outputSize) + "^"
-	logmsg += fmt.Sprintf("%0.4f", time.Since(this.beginTime).Seconds()) + "^"
-	logmsg += conv.String(status) + "^"
-	logmsg += errno
-
-	logFmt := Format(logmsg)
-	logFmt.caller = false
-	logFmt.Writeln("access")
+	logmsg += request.URL.String() + " "
+	logmsg += errno + " "
+	logmsg += errmsg + " "
+	logger.Format(logmsg).Writeln("access")
 }

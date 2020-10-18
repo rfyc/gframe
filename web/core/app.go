@@ -9,6 +9,8 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/phper-go/frame/web/route"
+
 	"github.com/phper-go/frame/logger"
 
 	"github.com/phper-go/frame/connect"
@@ -21,7 +23,7 @@ import (
 // }
 
 type App struct {
-	Debug         uint8
+	Debug         int
 	DefaultAction string
 	Logs          string
 	HTTPServer    *connect.HTTPServer
@@ -31,17 +33,16 @@ type App struct {
 
 func (this *App) Construct() {
 
-	handle := &route{}
-	handle.Debug = &this.Debug
-	handle.DefaultAction = &this.DefaultAction
+	route.Debug = &this.Debug
+	route.DefaultAction = &this.DefaultAction
 
 	this.HTTPServer = &connect.HTTPServer{}
 	this.HTTPServer.Construct()
-	this.HTTPServer.Handle("/", handle)
+	this.HTTPServer.Handle("/", &route.HTTP{})
 
-	this.TCPServer = &connect.TCPServer{}
-	this.TCPServer.Construct()
-	this.TCPServer.Handle("/", handle)
+	// this.TCPServer = &connect.TCPServer{}
+	// this.TCPServer.Construct()
+	// this.TCPServer.Handle("/", &route.TCP{})
 }
 
 func (this *App) initLogger() error {
@@ -92,15 +93,15 @@ func (this *App) Start() error {
 		}
 	})
 
-	this.Wrap(func() {
-		if this.TCPServer.Address != "" {
-			logger.Format("listen", this.TCPServer.Address, "tcp").Echo(os.Stderr)
-			err := this.TCPServer.Start()
-			logger.Format("listen end tcp -", err.Error()).Echo(os.Stderr)
-		} else {
-			logger.Format("addr empty tcp").Echo(os.Stderr)
-		}
-	})
+	// this.Wrap(func() {
+	// 	if this.TCPServer.Address != "" {
+	// 		logger.Format("listen", this.TCPServer.Address, "tcp").Echo(os.Stderr)
+	// 		err := this.TCPServer.Start()
+	// 		logger.Format("listen end tcp -", err.Error()).Echo(os.Stderr)
+	// 	} else {
+	// 		logger.Format("addr empty tcp").Echo(os.Stderr)
+	// 	}
+	// })
 
 	// this.Wrap(func() {
 	// 	ppid := os.Getppid()

@@ -10,13 +10,14 @@ import (
 )
 
 type config struct {
-	conf string
+	conf    string
+	AppName string
 }
 
 func (this *config) EnvName() string {
 	var env_name = "GOAPP_CONF"
-	if AppName != "" {
-		env_name += "_" + strings.ToUpper(AppName)
+	if this.AppName != "" {
+		env_name += "_" + strings.ToUpper(this.AppName)
 	}
 	return env_name
 }

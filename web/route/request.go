@@ -1,5 +1,10 @@
 package route
 
+import (
+	"net/http"
+	"strings"
+)
+
 func httpQueryString(request *http.Request) string {
 	params := strings.Split(request.RequestURI, "?")
 	if len(params) > 1 {

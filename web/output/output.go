@@ -5,7 +5,7 @@ import (
 )
 
 type Output struct {
-	Status  int
+	Status  string
 	Error   string
 	Content []byte
 	Cookies []*http.Cookie
@@ -14,5 +14,4 @@ type Output struct {
 
 func (this *Output) Redirect(uri string) {
 	this.Headers["Location"] = uri
-	this.Status = http.StatusFound
 }

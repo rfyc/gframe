@@ -1,8 +1,6 @@
 package core
 
 import (
-	"net/http"
-
 	"github.com/phper-go/frame/web/input"
 	"github.com/phper-go/frame/web/output"
 	"github.com/phper-go/frame/web/theme"
@@ -38,7 +36,7 @@ func (this *Controller) Construct(controllerName string, actionName string) {
 
 	this.output = &output.Output{
 		Headers: make(map[string]string),
-		Status:  http.StatusOK,
+		Status:  "200",
 	}
 
 	this.theme = &theme.Theme{}
