@@ -51,7 +51,7 @@ func (this *App) initLogger() error {
 		if execPath, err := os.Executable(); err != nil {
 			return errors.New("execpath - " + err.Error())
 		} else {
-			this.Logs = filepath.Dir(execPath)
+			this.Logs = filepath.Dir(execPath) + "/logs"
 		}
 		if err := os.MkdirAll(this.Logs, os.ModePerm); err != nil {
 			return errors.New("mkdir - " + err.Error())
