@@ -38,7 +38,7 @@ func (this *App) Construct() {
 
 	this.HTTPServer = &connect.HTTPServer{}
 	this.HTTPServer.Construct()
-	this.HTTPServer.Handle("/", &route.HTTP{})
+	this.HTTPServer.Handle("/", &route.Handler{})
 
 	// this.TCPServer = &connect.TCPServer{}
 	// this.TCPServer.Construct()

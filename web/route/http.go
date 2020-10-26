@@ -7,14 +7,12 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/phper-go/frame/web/session"
-
-	"github.com/phper-go/frame/func/object"
-
 	"github.com/phper-go/frame/func/conv"
 	"github.com/phper-go/frame/func/ip"
+	"github.com/phper-go/frame/func/object"
 	"github.com/phper-go/frame/interfaces"
 	"github.com/phper-go/frame/logger"
+	"github.com/phper-go/frame/web/session"
 )
 
 type HTTP struct {
@@ -79,6 +77,11 @@ func (this *HTTP) runController() {
 
 func (this *HTTP) outputController() {
 
+	//******** set session ********//
+	if err := sessionWrite(this.execController.Session()); err != nil {
+		panic(errors.New("write session fail:"))
+	}
+
 	//******** set status ********//
 	var output = this.execController.Output()
 	var location = conv.String(output.Headers["Location"])
@@ -109,10 +112,6 @@ func (this *HTTP) endController() {
 	//******** set cookies ********//
 	for _, cookie := range output.Cookies {
 		http.SetCookie(response, cookie)
-	}
-	//******** set session ********//
-	if err := sessionWrite(this.execController.Session()); err != nil {
-		this.error(http.StatusBadGateway, errors.New("write session fail:"))
 	}
 
 	this.execController.End()

@@ -2,6 +2,7 @@ package route
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -13,6 +14,15 @@ var Commands map[string]interface{}
 var Controllers map[string]interface{}
 var DefaultAction *string
 var Debug *int
+
+type Handler struct {
+}
+
+func (this *Handler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+
+	var http = &HTTP{}
+	http.ServeHTTP(response, request)
+}
 
 func parseURI(requestURI, defaultAction string) (controller, action string, err error) {
 
@@ -27,16 +37,17 @@ func parseURI(requestURI, defaultAction string) (controller, action string, err 
 	}
 
 	path := strings.Split(uri, "/")
-	switch len(path) {
-	case 3:
-		controller = "/" + path[0] + "/" + path[1]
-		action = path[2]
-	case 2:
-		controller = "/" + path[0]
-		action = path[1]
+	path_len := len(path)
+	switch path_len {
+	case 0:
+		controller = ""
+		action = ""
 	case 1:
 		controller = "/" + path[0]
 		action = "index"
+	default:
+		controller = "/" + strings.Join(path[0:path_len-1], "/")
+		action = path[path_len-1]
 	}
 
 	return strings.ToLower(controller), strings.ToLower(action), nil
@@ -55,7 +66,6 @@ func parseController(uri string) (execController interfaces.Controller, execMeth
 	if obj, ok := Controllers[strings.ToLower(action)]; ok {
 		if execController, ok = object.New(obj).(interfaces.Action); ok {
 			if _, ok := execController.(interfaces.Action); ok {
-
 				execController.Construct(controllerName, actionName)
 				return execController, "Run", nil
 			}
@@ -66,9 +76,9 @@ func parseController(uri string) (execController interfaces.Controller, execMeth
 	var ok bool
 	var obj interface{}
 	if obj, ok = Controllers[strings.ToLower(controllerName)]; !ok {
+		fmt.Println("not found")
 		return nil, "", errors.New(uri + " not found")
 	}
-
 	if execController, ok = object.New(obj).(interfaces.Controller); !ok {
 		return nil, "", errors.New(uri + " not controller")
 	}

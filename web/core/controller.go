@@ -14,6 +14,10 @@ type Controller struct {
 	theme   theme.Interface
 }
 
+func (this *Controller) Theme() theme.Interface {
+	return this.theme
+}
+
 func (this *Controller) Session() *session.Session {
 	return this.session
 }

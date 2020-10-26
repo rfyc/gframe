@@ -78,15 +78,17 @@ func (this *Theme) Render(tplFile string, layoutFiles ...string) []byte {
 	for index, file := range layoutFiles {
 		layoutFiles[index] = this.path + "/" + this.style + "/" + file + this.suffix
 	}
+
 	render, err := template.ParseFiles(layoutFiles...)
 	if err != nil {
 		panic(err.Error())
 	}
+
 	buffer := bytes.NewBuffer([]byte{})
 	err = render.Execute(buffer, this.params)
-
 	if err != nil {
 		panic(err.Error())
 	}
+
 	return buffer.Bytes()
 }
