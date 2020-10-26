@@ -17,6 +17,31 @@ var (
 	Store    StoreInterface
 )
 
+type Session struct {
+	SID    string
+	values map[string]interface{}
+}
+
+func (this *Session) Get(key string) (value interface{}) {
+
+	if this.values == nil {
+		this.values = make(map[string]interface{})
+	}
+	return this.values[key]
+}
+
+func (this *Session) Set(key string, value interface{}) {
+
+	if this.values == nil {
+		this.values = make(map[string]interface{})
+	}
+	this.values[key] = value
+}
+
+func (this *Session) All() map[string]interface{} {
+	return this.values
+}
+
 func init() {
 
 	path, err := filepath.Abs(filepath.Dir(os.Args[0]))

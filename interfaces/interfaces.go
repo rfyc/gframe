@@ -3,6 +3,8 @@ package interfaces
 import (
 	"net"
 
+	"github.com/phper-go/frame/web/session"
+
 	"github.com/phper-go/frame/web/input"
 	"github.com/phper-go/frame/web/output"
 )
@@ -50,6 +52,7 @@ type Controller interface {
 	End()
 	Input() *input.Input
 	Output() *output.Output
+	Session() *session.Session
 }
 
 type Action interface {

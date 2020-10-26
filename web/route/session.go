@@ -2,39 +2,35 @@ package route
 
 import (
 	"errors"
-	"net/http"
-	"time"
 
 	"github.com/phper-go/frame/func/conv"
-	"github.com/phper-go/frame/web/input"
-	"github.com/phper-go/frame/web/output"
+	"github.com/phper-go/frame/interfaces"
 	"github.com/phper-go/frame/web/session"
 )
 
-func sessionRead(input *input.Input, output *output.Output) error {
+func sessionRead(execController interfaces.Controller) error {
+
+	var input = execController.Input()
 
 	if session.Enable > 0 {
-		session_id := conv.String(input.Cookie[session.Name])
-		if len(session_id) == 0 {
-			session_id = session.ID()
-			output.Cookies = append(output.Cookies, &http.Cookie{
-				Name:    session.Name,
-				Value:   session_id,
-				Expires: time.Unix(time.Now().Unix()+int64(session.LifeTime), 0),
-			})
-			input.Cookie[session.Name] = session_id
+
+		execController.Session().SID = conv.String(input.Cookie[session.Name])
+		if len(execController.Session().SID) == 0 {
 			return nil
 		}
-		sessioin_data, err := session.Read(session_id)
+
+		sessioin_data, err := session.Read(execController.Session().SID)
 		if err != nil {
 			return errors.New("session read error: " + err.Error())
 		}
-		input.Session = sessioin_data
+
+		for key, val := range sessioin_data {
+			execController.Session().Set(key, val)
+		}
 	}
 	return nil
 }
 
-func sessionWrite(input *input.Input) error {
-	session_id := conv.String(input.Cookie[session.Name])
-	return session.Write(session_id, input.Session)
+func sessionWrite(sess *session.Session) error {
+	return session.Write(sess.SID, sess.All())
 }

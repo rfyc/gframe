@@ -3,13 +3,19 @@ package core
 import (
 	"github.com/phper-go/frame/web/input"
 	"github.com/phper-go/frame/web/output"
+	"github.com/phper-go/frame/web/session"
 	"github.com/phper-go/frame/web/theme"
 )
 
 type Controller struct {
-	input  *input.Input
-	output *output.Output
-	theme  theme.Interface
+	input   *input.Input
+	output  *output.Output
+	session *session.Session
+	theme   theme.Interface
+}
+
+func (this *Controller) Session() *session.Session {
+	return this.session
 }
 
 func (this *Controller) Input() *input.Input {
@@ -38,6 +44,8 @@ func (this *Controller) Construct(controllerName string, actionName string) {
 		Headers: make(map[string]string),
 		Status:  "200",
 	}
+
+	this.session = &session.Session{}
 
 	this.theme = &theme.Theme{}
 	this.theme.Construct()

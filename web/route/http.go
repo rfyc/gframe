@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/phper-go/frame/web/session"
+
 	"github.com/phper-go/frame/func/object"
 
 	"github.com/phper-go/frame/func/conv"
@@ -96,14 +98,22 @@ func (this *HTTP) endController() {
 	for key, val := range output.Headers {
 		response.Header().Set(key, val)
 	}
+	if this.execController.Session().SID == "" {
+		this.execController.Session().SID = session.ID()
+		output.Cookies = append(output.Cookies, &http.Cookie{
+			Name:    session.Name,
+			Value:   this.execController.Session().SID,
+			Expires: time.Unix(time.Now().Unix()+int64(session.LifeTime), 0),
+		})
+	}
 	//******** set cookies ********//
 	for _, cookie := range output.Cookies {
 		http.SetCookie(response, cookie)
 	}
 	//******** set session ********//
-	// if err := this.writeSession(input); err != nil {
-	// 	this.error(http.StatusBadGateway, errors.New("write session fail:"))
-	// }
+	if err := sessionWrite(this.execController.Session()); err != nil {
+		this.error(http.StatusBadGateway, errors.New("write session fail:"))
+	}
 
 	this.execController.End()
 
@@ -166,6 +176,8 @@ func (this *HTTP) initController() error {
 	input.Server.QueryString = httpQueryString(request)
 	input.Server.HttpReferer = request.Referer()
 	input.Server.HttpUserAgent = request.UserAgent()
+
+	sessionRead(this.execController)
 
 	return nil
 }
