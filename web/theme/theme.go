@@ -20,6 +20,7 @@ type Interface interface {
 	SetStyle(style string)
 	SetSuffix(suffix string)
 	SetLayouts(layoutFiles []string)
+	SetBuffer(buf *[]byte)
 	Assign(key string, val interface{})
 	Render(tplFile string, layoutFiles ...string) []byte
 }
@@ -44,6 +45,7 @@ type Theme struct {
 	style   string
 	suffix  string
 	layouts []string
+	buffer  *[]byte
 	params  map[string]interface{}
 }
 
@@ -53,22 +55,33 @@ func (this *Theme) Construct() {
 	this.path = DefaultPath
 	this.style = DefaultStyle
 	this.suffix = DefaultSuffix
+	this.buffer = &[]byte{}
 }
+
 func (this *Theme) SetPath(path string) {
 	this.path = path
 }
+
 func (this *Theme) SetStyle(style string) {
 	this.style = style
 }
+
 func (this *Theme) SetSuffix(suffix string) {
 	this.suffix = suffix
 }
+
 func (this *Theme) SetLayouts(layoutFiles []string) {
 	this.layouts = layoutFiles
 }
+
+func (this *Theme) SetBuffer(buf *[]byte) {
+	this.buffer = buf
+}
+
 func (this *Theme) Assign(key string, val interface{}) {
 	this.params[key] = val
 }
+
 func (this *Theme) Render(tplFile string, layoutFiles ...string) []byte {
 
 	if len(layoutFiles) == 0 {
@@ -90,5 +103,6 @@ func (this *Theme) Render(tplFile string, layoutFiles ...string) []byte {
 		panic(err.Error())
 	}
 
-	return buffer.Bytes()
+	*this.buffer = buffer.Bytes()
+	return *this.buffer
 }

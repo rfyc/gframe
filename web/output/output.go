@@ -2,6 +2,8 @@ package output
 
 import (
 	"net/http"
+
+	"github.com/phper-go/frame/web/theme"
 )
 
 type Output struct {
@@ -9,6 +11,7 @@ type Output struct {
 	Error   string
 	Content []byte
 	Cookies []*http.Cookie
+	Theme   theme.Interface
 	Headers map[string]string
 }
 

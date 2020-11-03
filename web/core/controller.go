@@ -11,11 +11,6 @@ type Controller struct {
 	input   *input.Input
 	output  *output.Output
 	session *session.Session
-	theme   theme.Interface
-}
-
-func (this *Controller) Theme() theme.Interface {
-	return this.theme
 }
 
 func (this *Controller) Session() *session.Session {
@@ -47,12 +42,15 @@ func (this *Controller) Construct(controllerName string, actionName string) {
 	this.output = &output.Output{
 		Headers: make(map[string]string),
 		Status:  "200",
+		Theme:   &theme.Theme{},
+		Content: []byte{},
 	}
+
+	this.output.Theme.Construct()
+	this.output.Theme.SetBuffer(&this.output.Content)
 
 	this.session = &session.Session{}
 
-	this.theme = &theme.Theme{}
-	this.theme.Construct()
 }
 
 func (this *Controller) Prepare() bool {

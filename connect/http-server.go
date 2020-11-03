@@ -5,6 +5,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
+
+	"github.com/phper-go/frame/func/file"
 
 	"github.com/phper-go/frame/func/conv"
 )
@@ -63,8 +66,9 @@ func (this *HTTPServer) Start() error {
 
 	if this.listener != nil {
 
-		if this.Static != "" {
-			this.serveMux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(this.Static))))
+		if this.Static != "" && file.IsDir(this.Static) {
+			var basepath = "/" + filepath.Base(this.Static) + "/"
+			this.serveMux.Handle(basepath, http.StripPrefix(basepath, http.FileServer(http.Dir(this.Static))))
 		}
 
 		return this.server.Serve(this.listener)

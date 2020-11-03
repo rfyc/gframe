@@ -15,7 +15,7 @@ import (
 	"github.com/phper-go/frame/web/session"
 )
 
-type HTTP struct {
+type httpRouter struct {
 	request        *http.Request
 	response       http.ResponseWriter
 	btime          time.Time
@@ -23,7 +23,7 @@ type HTTP struct {
 	execAction     string
 }
 
-func (this *HTTP) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+func (this *httpRouter) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 
 	this.btime = time.Now()
 	this.request = request
@@ -55,7 +55,7 @@ func (this *HTTP) ServeHTTP(response http.ResponseWriter, request *http.Request)
 
 }
 
-func (this *HTTP) paserController() error {
+func (this *httpRouter) paserController() error {
 
 	var err error
 	var uri = this.request.RequestURI
@@ -63,7 +63,7 @@ func (this *HTTP) paserController() error {
 	return err
 }
 
-func (this *HTTP) runController() {
+func (this *httpRouter) runController() {
 
 	if this.execAction == "Run" {
 		object.Set(this.execController, this.execController.Input().Request)
@@ -75,7 +75,7 @@ func (this *HTTP) runController() {
 	}
 }
 
-func (this *HTTP) outputController() {
+func (this *httpRouter) outputController() {
 
 	//******** set session ********//
 	if err := sessionWrite(this.execController.Session()); err != nil {
@@ -92,7 +92,7 @@ func (this *HTTP) outputController() {
 	}
 }
 
-func (this *HTTP) endController() {
+func (this *httpRouter) endController() {
 
 	var output = this.execController.Output()
 	var response = this.response
@@ -118,7 +118,7 @@ func (this *HTTP) endController() {
 
 }
 
-func (this *HTTP) initController() error {
+func (this *httpRouter) initController() error {
 
 	//******** request get ********//
 	var request = this.request
@@ -181,7 +181,7 @@ func (this *HTTP) initController() error {
 	return nil
 }
 
-func (this *HTTP) error(status int, err error) {
+func (this *httpRouter) error(status int, err error) {
 
 	if *Debug >= 1 {
 		this.write(status, "-", err.Error(), []byte(err.Error()))
@@ -190,14 +190,14 @@ func (this *HTTP) error(status int, err error) {
 	}
 }
 
-func (this *HTTP) write(status int, errno, errmsg string, content []byte) {
+func (this *httpRouter) write(status int, errno, errmsg string, content []byte) {
 
 	this.response.WriteHeader(status)
 	size, err := this.response.Write(content)
 	this.logger(status, errno, errmsg, size, err)
 }
 
-func (this *HTTP) logger(status int, errno, errmsg string, output_size int, output_err error) {
+func (this *httpRouter) logger(status int, errno, errmsg string, output_size int, output_err error) {
 
 	var request = this.request
 
