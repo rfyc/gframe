@@ -3,17 +3,10 @@ package interfaces
 import (
 	"net"
 
-	"github.com/phper-go/frame/web/session"
-
 	"github.com/phper-go/frame/web/input"
 	"github.com/phper-go/frame/web/output"
+	"github.com/phper-go/frame/web/session"
 )
-
-type Api interface {
-	Validator
-	SetErrors(errno, errmsg, field string)
-	GetErrors() (errno, errmsg, field string)
-}
 
 type Config interface {
 	EnvName() string
@@ -40,7 +33,6 @@ type Command interface {
 	Init() error
 	LoadApp() error
 	InitApp() error
-	Rules() ValidatorRules
 	Prepare() error
 	Run()
 	End()
@@ -63,15 +55,3 @@ type Action interface {
 type TCPHandler interface {
 	ServeTCP(net.Conn)
 }
-
-type Validator interface {
-	Rules() ValidatorRules
-}
-
-type ValidatorRule interface {
-	GetFields() string
-	Check(values map[string]interface{}) (errno, errmsg, field string)
-	CheckObject(obj interface{}) (errno, errmsg, field string)
-}
-
-type ValidatorRules []ValidatorRule

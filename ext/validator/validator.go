@@ -2,7 +2,6 @@ package validator
 
 import (
 	"github.com/phper-go/frame/func/object"
-	"github.com/phper-go/frame/interfaces"
 )
 
 var (
@@ -14,40 +13,43 @@ var (
 	errmsg_local_file = "not exist"
 )
 
-func MergeRules(rules, rules1 interfaces.ValidatorRules) interfaces.ValidatorRules {
-	for _, rule := range rules1 {
-		rules = append(rules, rule)
-	}
-	return rules
+type Rules []Rule
+
+type Interface interface {
+	Rules() Rules
 }
 
-func Check(obj interfaces.Validator) (errno, errmsg, field string) {
+type Rule interface {
+	GetFields() string
+	CheckObject(obj interface{}) (errno, errmsg, field string)
+	Check(values map[string]interface{}) (errno, errmsg, field string)
+}
 
-	values := object.Values(obj)
+func Merge(rules1, rules2 Rules) Rules {
+	for _, rule := range rules2 {
+		rules1 = append(rules1, rule)
+	}
+	return rules1
+}
 
-	rules := obj.Rules()
+func Check(validator Interface) (errno, errmsg, field string) {
+
+	values := object.Values(validator)
+
+	rules := validator.Rules()
 
 	for _, rule := range rules {
 
 		errno, errmsg, field = rule.Check(values)
 		if errno != "" || field != "" {
 			if errno == "" {
-				errno = "1300"
+				errno = errno_default
 			}
 			if errmsg == "" {
-				errmsg = "param fail"
+				errmsg = errmsg_default
 			}
 			return
 		}
 	}
 	return
-}
-
-func CheckApi(obj interfaces.Api) bool {
-	errno, errmsg, field := Check(obj)
-	if field != "" || errno != "" {
-		obj.SetErrors(errno, errmsg, field)
-		return false
-	}
-	return true
 }
