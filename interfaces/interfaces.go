@@ -8,19 +8,18 @@ import (
 	"github.com/phper-go/frame/web/session"
 )
 
-type Config interface {
-	EnvName() string
-	EnvFile() string
-	DefaultFile() string
-	Load(app App, file ...string) error
-}
-
 type App interface {
 	Construct()
 	Init() error
 	Start() error
 	Wrap(func())
 	Wait()
+}
+type Config interface {
+	EnvName() string
+	EnvFile() string
+	DefaultFile() string
+	Load(app App, file ...string) error
 }
 
 type DBModel interface {

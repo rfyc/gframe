@@ -1,7 +1,6 @@
 package core
 
 import (
-	"github.com/phper-go/frame/ext/validator"
 	"github.com/phper-go/frame/interfaces"
 )
 
@@ -41,12 +40,6 @@ func (this *Command) InitApp() error {
 func (this *Command) Prepare() error {
 
 	return nil
-}
-
-func (this *Command) Rules() interfaces.ValidatorRules {
-	return interfaces.ValidatorRules{
-		&validator.LocalFile{Fields: "config,logpath", AllowEmpty: true},
-	}
 }
 
 func (this *Command) Run() {

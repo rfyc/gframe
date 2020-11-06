@@ -6,7 +6,6 @@ import (
 
 	"github.com/phper-go/frame/ext/validator"
 	"github.com/phper-go/frame/func/object"
-	"github.com/phper-go/frame/interfaces"
 	"github.com/phper-go/frame/web/form/element"
 )
 
@@ -25,7 +24,7 @@ func (this *Builder) Construct(action string, method string) {
 	this.Elements = []element.Interface{}
 }
 
-func (this *Builder) Bind(obj interfaces.Api) {
+func (this *Builder) Bind(obj validator.Interface) {
 
 	mapRequireds := make(map[string]bool)
 	rules := obj.Rules()
@@ -40,8 +39,11 @@ func (this *Builder) Bind(obj interfaces.Api) {
 
 	}
 
-	var errno, errmsg, field = obj.GetErrors()
+	var errno, errmsg, field string
 	var values = object.Values(obj)
+	if tmp, ok := obj.(validator.ApiInterface); ok {
+		errno, errmsg, field = tmp.GetErrors()
+	}
 	for _, elem := range this.Elements {
 		var fieldVal interface{}
 		elemName := strings.ToLower(elem.Name())

@@ -43,11 +43,14 @@ func Run(execApp interfaces.App, args []string) {
 	echo("cmd attrs", object.Values(execCmd))
 
 	//********* args check *********//
-	if field, errno, errmsg := validator.Check(execCmd); errno != "" {
-		echo("cmd args check ...", "--"+field+"="+errmsg+":"+errno)
-		return
-	} else {
-		echo("cmd args check ...", "pass")
+	if _, ok = execCmd.(validator.Interface); ok {
+		valid := execCmd.(validator.Interface)
+		if field, errno, errmsg := validator.Check(valid); errno != "" {
+			echo("cmd args check ...", "--"+field+"="+errmsg+":"+errno)
+			return
+		} else {
+			echo("cmd args check ...", "pass")
+		}
 	}
 
 	echo("app env conf:", core.Config.EnvName(), "=", core.Config.EnvFile(), "| default conf:", core.Config.DefaultFile())

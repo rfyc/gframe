@@ -13,6 +13,11 @@ var (
 	errmsg_local_file = "not exist"
 )
 
+type ApiInterface interface {
+	GetErrors() (errno, errmsg, field string)
+	SetErrors(errno, errmsg, field string)
+}
+
 type Rules []Rule
 
 type Interface interface {
@@ -48,6 +53,11 @@ func Check(validator Interface) (errno, errmsg, field string) {
 			if errmsg == "" {
 				errmsg = errmsg_default
 			}
+
+			if api, ok := validator.(ApiInterface); ok {
+				api.SetErrors(errno, errmsg, field)
+			}
+
 			return
 		}
 	}
