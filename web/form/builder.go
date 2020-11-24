@@ -24,19 +24,21 @@ func (this *Builder) Construct(action string, method string) {
 	this.Elements = []element.Interface{}
 }
 
-func (this *Builder) Bind(obj validator.Interface) {
+func (this *Builder) Bind(obj interface{}) {
 
 	mapRequireds := make(map[string]bool)
-	rules := obj.Rules()
-	for _, rule := range rules {
-		if reflect.TypeOf(rule).String() == reflect.TypeOf(&validator.Required{}).String() {
-			fields := strings.Split(rule.GetFields(), ",")
-			for _, field := range fields {
-				mapRequireds[strings.ToLower(field)] = true
-				continue
+	valiObj, is_vali := obj.(validator.Interface)
+	if is_vali {
+		rules := valiObj.Rules()
+		for _, rule := range rules {
+			if reflect.TypeOf(rule).String() == reflect.TypeOf(&validator.Required{}).String() {
+				fields := strings.Split(rule.GetFields(), ",")
+				for _, field := range fields {
+					mapRequireds[strings.ToLower(field)] = true
+					continue
+				}
 			}
 		}
-
 	}
 
 	var errno, errmsg, field string

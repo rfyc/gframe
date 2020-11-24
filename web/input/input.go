@@ -2,6 +2,8 @@ package input
 
 import (
 	"net"
+
+	"github.com/phper-go/frame/func/object"
 )
 
 type Input struct {
@@ -14,6 +16,11 @@ type Input struct {
 	Session    map[string]interface{}
 	Header     map[string]interface{}
 	Server     *Server
+}
+
+func (this *Input) Bind(obj interface{}) error {
+
+	return object.Set(obj, this.Request)
 }
 
 type Server struct {
