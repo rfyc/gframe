@@ -47,7 +47,7 @@ func (this *controller) IndexAction() {
 	buf := &bytes.Buffer{}
 	err = tpl.Execute(buf, map[string]interface{}{"keys": skeys})
 	fmt.Println(err)
-	this.Output().Content = buf.Bytes()
+	this.Ctx().Output.Content = buf.Bytes()
 }
 
 func (this *controller) InfoAction() {

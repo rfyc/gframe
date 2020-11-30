@@ -1,8 +1,8 @@
 package ctx
 
 import (
-	"net"
 	"net/http"
+	"strings"
 
 	"github.com/phper-go/frame/func/object"
 )
@@ -22,9 +22,8 @@ func (this *Input) Bind(obj interface{}) error {
 	return object.Set(obj, this.Request)
 }
 
-func NewInputHTTP(request *http.Request) *Input {
-
-	var input = &Input{
+func NewInput() *Input {
+	return &Input{
 		Request: make(map[string]interface{}),
 		Get:     make(map[string]interface{}),
 		Post:    make(map[string]interface{}),
@@ -33,6 +32,11 @@ func NewInputHTTP(request *http.Request) *Input {
 		Header:  make(map[string]interface{}),
 		Server:  &Server{},
 	}
+}
+
+func NewInputHTTP(request *http.Request) *Input {
+
+	var input = NewInput()
 
 	//******** request get ********//
 	for key, value := range request.URL.Query() {

@@ -1,56 +1,18 @@
 package core
 
 import (
-	"github.com/phper-go/frame/web/input"
-	"github.com/phper-go/frame/web/output"
-	"github.com/phper-go/frame/web/session"
-	"github.com/phper-go/frame/web/theme"
+	"github.com/phper-go/frame/web/ctx"
 )
 
 type Controller struct {
-	input   *input.Input
-	output  *output.Output
-	session *session.Session
+	ctx *ctx.Ctx
 }
 
-func (this *Controller) Session() *session.Session {
-	return this.session
-}
-
-func (this *Controller) Input() *input.Input {
-	return this.input
-}
-
-func (this *Controller) Output() *output.Output {
-	return this.output
-}
-
-func (this *Controller) Construct(controllerName string, actionName string) {
-
-	this.input = &input.Input{
-		Controller: controllerName,
-		Action:     actionName,
-		Request:    make(map[string]interface{}),
-		Get:        make(map[string]interface{}),
-		Post:       make(map[string]interface{}),
-		Cookie:     make(map[string]interface{}),
-		Session:    make(map[string]interface{}),
-		Header:     make(map[string]interface{}),
-		Server:     &input.Server{},
+func (this *Controller) Ctx() *ctx.Ctx {
+	if this.ctx == nil {
+		this.ctx = &ctx.Ctx{}
 	}
-
-	this.output = &output.Output{
-		Headers: make(map[string]string),
-		Status:  "200",
-		Theme:   &theme.Theme{},
-		Content: []byte{},
-	}
-
-	this.output.Theme.Construct()
-	this.output.Theme.SetBuffer(&this.output.Content)
-
-	this.session = &session.Session{}
-
+	return this.ctx
 }
 
 func (this *Controller) Prepare() bool {

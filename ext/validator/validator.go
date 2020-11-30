@@ -63,5 +63,3 @@ func Check(validator Interface) (errno, errmsg, field string) {
 	}
 	return
 }
-
-func Check()

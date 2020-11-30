@@ -4,28 +4,28 @@ import (
 	"errors"
 
 	"github.com/phper-go/frame/func/conv"
-	"github.com/phper-go/frame/interfaces"
+	"github.com/phper-go/frame/web/ctx"
 	"github.com/phper-go/frame/web/session"
 )
 
-func sessionRead(execController interfaces.Controller) error {
+func sessionRead(Ctx *ctx.Ctx) error {
 
-	var input = execController.Input()
-
+	var input = Ctx.Input
+	var sess = Ctx.Session
 	if session.Enable > 0 {
 
-		execController.Session().SID = conv.String(input.Cookie[session.Name])
-		if len(execController.Session().SID) == 0 {
+		sess.SID = conv.String(input.Cookie[session.Name])
+		if len(sess.SID) == 0 {
 			return nil
 		}
 
-		sessioin_data, err := session.Read(execController.Session().SID)
+		sessioin_data, err := session.Read(sess.SID)
 		if err != nil {
 			return errors.New("session read error: " + err.Error())
 		}
 
 		for key, val := range sessioin_data {
-			execController.Session().Set(key, val)
+			sess.Set(key, val)
 		}
 	}
 	return nil

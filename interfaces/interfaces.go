@@ -3,9 +3,7 @@ package interfaces
 import (
 	"net"
 
-	"github.com/phper-go/frame/web/input"
-	"github.com/phper-go/frame/web/output"
-	"github.com/phper-go/frame/web/session"
+	"github.com/phper-go/frame/web/ctx"
 )
 
 type App interface {
@@ -38,12 +36,9 @@ type Command interface {
 }
 
 type Controller interface {
-	Construct(controllerName, actionName string)
+	Ctx() *ctx.Ctx
 	Prepare() bool
 	End()
-	Input() *input.Input
-	Output() *output.Output
-	Session() *session.Session
 }
 
 type Action interface {

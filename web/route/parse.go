@@ -51,7 +51,6 @@ func parseController(uri string) (execController interfaces.Controller, execMeth
 	if obj, ok := Controllers[strings.ToLower(action)]; ok {
 		if execController, ok = object.New(obj).(interfaces.Action); ok {
 			if _, ok := execController.(interfaces.Action); ok {
-				execController.Construct(controllerName, actionName)
 				return execController, "Run", nil
 			}
 		}
@@ -71,9 +70,5 @@ func parseController(uri string) (execController interfaces.Controller, execMeth
 	if execMethod == "" {
 		return nil, "", errors.New(uri + " action not found")
 	}
-
-	//******** controller init ********//
-	execController.Construct(controllerName, actionName)
-
 	return execController, execMethod, nil
 }

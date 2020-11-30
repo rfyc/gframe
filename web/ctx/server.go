@@ -1,9 +1,5 @@
 package ctx
 
-import (
-	"net/http"
-)
-
 type Server struct {
 	IsGet         bool
 	IsPost        bool

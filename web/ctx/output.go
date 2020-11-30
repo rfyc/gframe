@@ -15,3 +15,15 @@ type Output struct {
 func (this *Output) Redirect(uri string) {
 	this.Headers["Location"] = uri
 }
+
+func NewOutput() *Output {
+
+	var output = &Output{
+		Headers: make(map[string]string),
+		Status:  "200",
+		Content: []byte{},
+	}
+
+	return output
+
+}

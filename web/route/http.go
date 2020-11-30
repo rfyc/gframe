@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/phper-go/frame/web/ctx"
+
 	"github.com/phper-go/frame/func/conv"
 	"github.com/phper-go/frame/func/ip"
 	"github.com/phper-go/frame/func/object"
@@ -39,6 +41,8 @@ func (this *httpRouter) ServeHTTP(response http.ResponseWriter, request *http.Re
 		return
 	}
 
+	fmt.Println(this.execController.Ctx())
+
 	this.runController()
 
 	this.endController()
@@ -66,7 +70,7 @@ func (this *httpRouter) paserController() error {
 func (this *httpRouter) runController() {
 
 	if this.execAction == "Run" {
-		object.Set(this.execController, this.execController.Input().Request)
+		object.Set(this.execController, this.execController.Ctx().Input.Request)
 	}
 
 	if isok := this.execController.Prepare(); isok {
@@ -78,12 +82,12 @@ func (this *httpRouter) runController() {
 func (this *httpRouter) outputController() {
 
 	//******** set session ********//
-	if err := sessionWrite(this.execController.Session()); err != nil {
+	if err := sessionWrite(this.execController.Ctx().Session); err != nil {
 		panic(errors.New("write session fail:"))
 	}
 
 	//******** set status ********//
-	var output = this.execController.Output()
+	var output = this.execController.Ctx().Output
 	var location = conv.String(output.Headers["Location"])
 	if len(location) > 0 {
 		http.Redirect(this.response, this.request, location, http.StatusFound)
@@ -94,18 +98,18 @@ func (this *httpRouter) outputController() {
 
 func (this *httpRouter) endController() {
 
-	var output = this.execController.Output()
+	var output = this.execController.Ctx().Output
 	var response = this.response
 
 	//******** set header ********//
 	for key, val := range output.Headers {
 		response.Header().Set(key, val)
 	}
-	if this.execController.Session().SID == "" {
-		this.execController.Session().SID = session.ID()
+	if this.execController.Ctx().Session.SID == "" {
+		this.execController.Ctx().Session.SID = session.ID()
 		output.Cookies = append(output.Cookies, &http.Cookie{
 			Name:    session.Name,
-			Value:   this.execController.Session().SID,
+			Value:   this.execController.Ctx().Session.SID,
 			Expires: time.Unix(time.Now().Unix()+int64(session.LifeTime), 0),
 		})
 	}
@@ -121,64 +125,18 @@ func (this *httpRouter) endController() {
 func (this *httpRouter) initController() error {
 
 	//******** request get ********//
-	var request = this.request
-	var input = this.execController.Input()
-	for key, value := range request.URL.Query() {
-		count := len(value)
-		if count > 1 {
-			input.Request[key] = value
-			input.Get[key] = value
-		} else if count == 1 {
-			input.Request[key] = value[0]
-			input.Get[key] = value[0]
-		}
-	}
 
-	request.ParseForm()
+	var Ctx = ctx.NewCtxHTTP(this.response, this.request)
+	var _ctx = this.execController.Ctx()
+	_ctx.Action = Ctx.Action
+	_ctx.Controller = Ctx.Controller
+	_ctx.Context = Ctx.Context
+	_ctx.Input = Ctx.Input
+	_ctx.Output = Ctx.Output
+	_ctx.Session = Ctx.Session
+	_ctx.Theme = Ctx.Theme
+	return sessionRead(_ctx)
 
-	//******** request post ********//
-	for key, value := range request.PostForm {
-		count := len(value)
-		if count > 1 {
-			input.Request[key] = value
-			input.Post[key] = value
-		} else if count == 1 {
-			input.Request[key] = value[0]
-			input.Post[key] = value[0]
-		}
-	}
-
-	//******** header ********//
-	for key, value := range request.Header {
-		count := len(value)
-		if count > 1 {
-			input.Header[key] = value
-		} else if count == 1 {
-			input.Header[key] = value[0]
-		}
-	}
-
-	//******** cookie ********//
-	for _, cookie := range request.Cookies() {
-		input.Cookie[cookie.Name] = cookie.Value
-	}
-
-	//******** server ********//
-	input.Server.IsHttp = true
-	input.Server.IsPost = request.Method == "POST"
-	input.Server.IsGet = request.Method == "GET"
-	input.Server.IsAjax = len(request.Header.Get("x-requested-with")) > 0
-	input.Server.RemoteAddr = request.RemoteAddr
-	input.Server.ServerName = httpServerName(request)
-	input.Server.ServerPort = httpServerPort(request)
-	input.Server.QueryPath = httpQueryPath(request)
-	input.Server.QueryString = httpQueryString(request)
-	input.Server.HttpReferer = request.Referer()
-	input.Server.HttpUserAgent = request.UserAgent()
-
-	sessionRead(this.execController)
-
-	return nil
 }
 
 func (this *httpRouter) error(status int, err error) {
