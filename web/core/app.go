@@ -60,7 +60,7 @@ func (this *App) initLogger() error {
 			return errors.New("writable - " + err.Error())
 		}
 	}
-	logger.SetPath(this.Logs)
+	logger.Path = this.Logs
 	return nil
 }
 

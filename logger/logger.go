@@ -1,124 +1,45 @@
 package logger
 
 import (
-	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
-
-	// "runtime"
-	"sync/atomic"
 	"time"
 
 	"github.com/phper-go/frame/func/conv"
 )
 
-func SetSuffix(suffix string) {
+var Path string
+var LogFormatHandler func(data ...interface{}) string
+var LogFileHandler func(fdname string) string
+var ErrorHandler func(fdname, logmsg string, size int, err error)
 
-	if suffix == "" {
-		suffix = time.Now().Format("20060102")
-	}
-	if logSuffix != suffix {
-		flag := atomic.AddInt32(&mux, 1)
-		if flag == 1 {
-			go func() {
-				err := swapSuffix(suffix)
-				if err != nil {
-					writeln("logger.error", err.Error())
-				}
-			}()
-		}
-	}
-}
-
-func SetPath(path string) (realpath string, err error) {
-
-	//******* args path ********/
-	if path != "" {
-		_, err = os.Stat(path)
-		if err != nil {
-			err = os.MkdirAll(path, fileMode)
-		}
-		if err == nil {
-			logPath = path
-			return logPath, nil
-		}
-	}
-	//******* default path ********/
-	var ferr error
-	if realpath, ferr = filepath.Abs(filepath.Dir(os.Args[0])); err == nil {
-		realpath += "/logs"
-		_, ferr = os.Stat(realpath)
-		if ferr != nil {
-			ferr = os.MkdirAll(path, fileMode)
-		}
-		if ferr == nil {
-			logPath = realpath
-			return logPath, err
-		}
-	}
-	//******* return error ********/
-	var returnErr error
-	returnErr = errors.New(realpath + ":" + ferr.Error())
-	if err != nil {
-		returnErr = errors.New(path + ":" + err.Error() + ";" + returnErr.Error())
-	}
-	return logPath, returnErr
-}
-
-func Writeln(fdname string, msg string, noSuffix ...bool) (int, error) {
-
-	nosuf := false
-	if len(noSuffix) > 0 {
-		nosuf = noSuffix[0]
-	}
-	if !nosuf {
-
-		fd, ok := fdMaps[fdname]
-		if !ok {
-			flag := atomic.AddInt32(&mux, 1)
-			if flag == 1 {
-				go func() {
-					err := build(fdname)
-					if err != nil {
-						writeln("logger.error", err.Error())
-					}
-				}()
-			}
-			return writeln(fdname, msg)
-		} else {
-			len, err := fmt.Fprintln(fd, msg)
-			if err != nil {
-				return writeln(fdname, msg)
-			}
-			return len, err
-		}
-	} else {
-		return writeln(fdname, msg)
-	}
+func init() {
+	Path = filepath.Dir(os.Args[0]) + "/logs"
+	LogFormatHandler = logFormatHandler
+	LogFileHandler = logFileHandler
+	ErrorHandler = errorHandler
 }
 
 func Format(data ...interface{}) *logFormat {
 	logFmt := &logFormat{}
-	logFmt.data = data
-	logFmt.caller = true
+	logFmt.logmsg = LogFormatHandler(data...)
 	return logFmt
 }
 
-func ErrorHandler(fdname, msg string, size int, err error) {
+func logFileHandler(fdname string) string {
+
+	return Path + "/" + fdname + ".log." + time.Now().Format("20060102")
+}
+
+func errorHandler(fdname, logmsg string, size int, err error) {
 
 }
 
-func FormatHandler(caller bool, data ...interface{}) string {
+func logFormatHandler(data ...interface{}) string {
 
 	logmsg := time.Now().Format("2006-01-02 15:04:05.000") + " | "
-	logmsg += conv.String(os.Getpid()) + " | "
-	if caller {
-		// _, file, line, ok := runtime.Caller(2)
-		// if ok {
-		// 	logmsg += filepath.Base(file) + ":" + conv.String(line) + " | "
-		// }
-	}
 	if len(data) > 0 {
 		for _, val := range data {
 			logmsg += conv.String(val) + " "
@@ -127,9 +48,43 @@ func FormatHandler(caller bool, data ...interface{}) string {
 	return logmsg
 }
 
-func Access() accessInterface {
+func writeln(fdname string, msg string) (int, error) {
 
-	log := &access{}
-	log.beginTime = time.Now()
-	return log
+	var filename = LogFileHandler(fdname)
+	var fileMode os.FileMode = 0755
+	fd, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_APPEND, fileMode)
+	defer fd.Close()
+	if err != nil {
+		return 0, err
+	}
+	return fmt.Fprintln(fd, msg)
+}
+
+type logFormat struct {
+	logmsg string
+}
+
+func (this *logFormat) Info(fdname string) *logFormat {
+
+	fdname += ".info"
+	return this.Writeln(fdname)
+}
+
+func (this *logFormat) Writeln(fdname string) *logFormat {
+
+	size, err := writeln(fdname, this.logmsg)
+	ErrorHandler(fdname, this.logmsg, size, err)
+	return this
+}
+
+func (this *logFormat) Error(fdname string) *logFormat {
+
+	fdname += ".error"
+	return this.Writeln(fdname)
+}
+
+func (this *logFormat) Echo(stdio io.Writer) *logFormat {
+	size, err := fmt.Fprintln(stdio, this.logmsg)
+	ErrorHandler("Writer", this.logmsg, size, err)
+	return this
 }
