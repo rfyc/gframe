@@ -84,6 +84,8 @@ func String(temp interface{}) string {
 		return value
 	case []byte:
 		return string(value)
+	case time.Time:
+		return value.Format("2006-01-02 15:04:05")
 	default:
 		if obj, ok := value.(stringInterface); ok {
 			return obj.String()
