@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -10,6 +11,15 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	// "github.com/phper-go/frame/func/conv"
 )
+
+type PDO interface {
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+}
 
 type DB struct {
 	db           *sql.DB
@@ -91,9 +101,31 @@ func (this *DB) ConnString() string {
 	return connString
 }
 
-func (this *DB) Cmd() *DBCommand {
+func (this *DB) Cmd(ctx ...context.Context) *DBCommand {
+
+	return Cmd(this.db, ctx...)
+}
+
+func Cmd(pdo PDO, ctx ...context.Context) *DBCommand {
 
 	command := &DBCommand{}
-	command.SetDB(this.db)
+	command.SetPDO(pdo)
+	if len(ctx) > 0 {
+		command.SetContext(ctx[0])
+	}
 	return command
+}
+
+func Commit(db *sql.DB, txRun func(tx *sql.Tx, ctx ...context.Context) error) error {
+
+	if tx, err := db.Begin(); err != nil {
+		return err
+	} else {
+		if err := txRun(tx * sql.Tx); err != nil {
+			return tx.Rollback()
+		} else {
+			return tx.Commit()
+		}
+	}
+
 }

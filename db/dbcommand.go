@@ -1,7 +1,7 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"strconv"
 	"strings"
 
@@ -13,7 +13,8 @@ import (
 )
 
 type DBCommand struct {
-	db        *sql.DB
+	pdo       PDO
+	context   context.Context
 	dbmodel   interfaces.DBModel
 	table     string
 	field     string
@@ -30,11 +31,14 @@ type DBCommand struct {
 	args      []interface{}
 }
 
-func (this *DBCommand) SetDB(conn *sql.DB) *DBCommand {
-	this.db = conn
+func (this *DBCommand) SetPDO(pdo PDO) *DBCommand {
+	this.pdo = pdo
 	return this
 }
-
+func (this *DBCommand) SetContext(ctx context.Context) *DBCommand {
+	this.context = ctx
+	return this
+}
 func (this *DBCommand) Table(table string) *DBCommand {
 	this.table = table
 	return this
@@ -144,7 +148,7 @@ func (this *DBCommand) Sql() string {
 func (this *DBCommand) Clone() *DBCommand {
 
 	cmd := &DBCommand{}
-	cmd.db = this.db
+	cmd.pdo = this.pdo
 	cmd.table = this.table
 	cmd.field = this.field
 	cmd.condition = this.condition
@@ -198,7 +202,7 @@ func (this *DBCommand) QueryBinds(objs []interface{}) error {
 func (this *DBCommand) QueryRows() ([]map[string]string, error) {
 
 	var result []map[string]string
-	rows, err := this.db.Query(this.Sql(), this.args...)
+	rows, err := this.pdo.Query(this.Sql(), this.args...)
 	if err != nil {
 		return result, err
 	}
@@ -237,7 +241,7 @@ func (this *DBCommand) QueryCount() (int, error) {
 func (this *DBCommand) QueryList() ([]map[string]interface{}, error) {
 
 	var result []map[string]interface{}
-	rows, err := this.db.Query(this.Sql(), this.args...)
+	rows, err := this.pdo.Query(this.Sql(), this.args...)
 	if err != nil {
 		return result, err
 	}
@@ -283,7 +287,8 @@ func (this *DBCommand) Update(fields map[string]interface{}, condition string, a
 	if len(condition) > 0 {
 		sql += " where " + condition
 	}
-	result, err := this.db.Exec(sql, params...)
+
+	result, err := this.pdo.Exec(sql, params...)
 	if err != nil {
 		return 0, err
 	}
@@ -302,7 +307,7 @@ func (this *DBCommand) Insert(record map[string]interface{}) (int64, error) {
 	}
 	field = strings.Trim(field, ",")
 	sql := "insert into " + this.table + " set " + field
-	result, err := this.db.Exec(sql, params...)
+	result, err := this.pdo.Exec(sql, params...)
 	if err != nil {
 		return 0, err
 	}
