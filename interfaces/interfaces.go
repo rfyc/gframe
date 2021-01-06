@@ -13,6 +13,7 @@ type App interface {
 	Wrap(func())
 	Wait()
 }
+
 type Config interface {
 	EnvName() string
 	EnvFile() string

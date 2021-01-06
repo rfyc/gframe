@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type stringInterface interface {
@@ -162,4 +163,10 @@ func Bool(temp interface{}) bool {
 }
 func Bytes(temp interface{}) []byte {
 	return []byte(String(temp))
+}
+
+func Strings(temp interface{}) []string {
+	var ss []string
+	json.Unmarshal(Bytes(temp), &ss)
+	return ss
 }
