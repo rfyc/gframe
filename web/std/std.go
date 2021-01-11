@@ -14,97 +14,97 @@ type T struct {
 	maps  *Maps
 }
 
-func (this *T) String() string {
+func (this T) String() string {
 	return conv.String(this.value)
 }
 
-func (this *T) Int() int {
+func (this T) Int() int {
 	return conv.Int(this.value)
 }
 
-func (this *T) Int8() int8 {
+func (this T) Int8() int8 {
 	return conv.Int8(this.value)
 }
 
-func (this *T) Int16() int16 {
+func (this T) Int16() int16 {
 	return conv.Int16(this.value)
 }
 
-func (this *T) Int32() int32 {
+func (this T) Int32() int32 {
 	return conv.Int32(this.value)
 }
 
-func (this *T) Int64() int64 {
+func (this T) Int64() int64 {
 	return conv.Int64(this.value)
 }
 
-func (this *T) Uint() uint {
+func (this T) Uint() uint {
 	return conv.Uint(this.value)
 }
 
-func (this *T) Uint8() uint8 {
+func (this T) Uint8() uint8 {
 	return conv.Uint8(this.value)
 }
 
-func (this *T) Uint16() uint16 {
+func (this T) Uint16() uint16 {
 	return conv.Uint16(this.value)
 }
 
-func (this *T) Uint32() uint32 {
+func (this T) Uint32() uint32 {
 	return conv.Uint32(this.value)
 }
 
-func (this *T) Uint64() uint64 {
+func (this T) Uint64() uint64 {
 	return conv.Uint64(this.value)
 }
 
-func (this *T) Float32() float32 {
+func (this T) Float32() float32 {
 	return conv.Float32(this.value)
 }
 
-func (this *T) Float64() float64 {
+func (this T) Float64() float64 {
 	return conv.Float64(this.value)
 }
 
-func (this *T) Bool() bool {
+func (this T) Bool() bool {
 	return conv.Bool(this.value)
 }
 
-func (this *T) Bytes() []byte {
+func (this T) Bytes() []byte {
 	return conv.Bytes(this.value)
 }
 
-func (this *T) Strings() []string {
+func (this T) Strings() []string {
 	return conv.Strings(this.value)
 }
 
-func (this *T) Array() *Array {
+func (this T) Array() *Array {
 	if this.array == nil {
 		this.array = NewArray(this.Bytes())
 	}
 	return this.array
 }
 
-func (this *T) Maps() *Maps {
+func (this T) Maps() *Maps {
 	if this.maps == nil {
 		this.maps = NewMaps(this.Bytes())
 	}
 	return this.maps
 }
 
-func (this *T) Index(index int) *T {
+func (this T) Index(index int) T {
 	return this.Array().Index(index)
 }
 
-func (this *T) Item(key string) *T {
+func (this T) Item(key string) T {
 	return this.Maps().Item(key)
 }
 
-func (this *T) IsNil() bool {
+func (this T) IsNil() bool {
 	return this.value == nil
 }
 
-func (this *T) IsEmpty() bool {
+func (this T) IsEmpty() bool {
 
 	if this.IsNil() {
 		return true
@@ -116,11 +116,11 @@ func (this *T) IsEmpty() bool {
 	return false
 }
 
-func (this *T) Error() error {
+func (this T) Error() error {
 	return this.err
 }
 
-func (this *T) Println() {
+func (this T) Println() {
 	fmt.Println(this.String())
 }
 
@@ -130,7 +130,7 @@ type Array struct {
 	err   error
 }
 
-func (this *Array) Index(index int) *T {
+func (this *Array) Index(index int) T {
 
 	if this.Len() > index {
 		item := this.array[index]
@@ -148,8 +148,8 @@ func (this *Array) Len() int {
 	return this.len
 }
 
-func (this *Array) All() []*T {
-	var items []*T
+func (this *Array) All() []T {
+	var items []T
 	for _, value := range this.array {
 		items = append(items, NewT(value))
 	}
@@ -171,7 +171,7 @@ type Maps struct {
 	err  error
 }
 
-func (this *Maps) Item(key string) *T {
+func (this *Maps) Item(key string) T {
 	if item, ok := this.maps[key]; ok {
 		return NewT(item)
 	}
@@ -183,8 +183,8 @@ func (this *Maps) Len() int {
 	return len(this.maps)
 }
 
-func (this *Maps) All() map[string]*T {
-	var items map[string]*T
+func (this *Maps) All() map[string]T {
+	var items map[string]T
 	for key, value := range this.maps {
 		items[key] = NewT(value)
 	}
@@ -214,8 +214,8 @@ func NewMaps(bytes []byte) *Maps {
 	return maps
 }
 
-func NewT(value interface{}, err ...error) *T {
-	t := &T{
+func NewT(value interface{}, err ...error) T {
+	t := T{
 		value: value,
 	}
 	if len(err) > 0 {

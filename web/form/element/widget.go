@@ -2,7 +2,6 @@ package element
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 )
 
@@ -30,17 +29,13 @@ func (this *widgetElement) Set(formObj interface{}, required bool) {
 }
 func (this *widgetElement) Render(attributes ...string) template.HTML {
 
-	fmt.Println(this.path, this.file)
 	render, err := template.ParseFiles(this.path + "/" + this.file + ".html")
-	fmt.Println(err)
 
 	if err != nil {
 		return template.HTML("widget " + this.file + " " + err.Error())
 	}
 	buffer := bytes.NewBuffer([]byte{})
 	err = render.Execute(buffer, this.form)
-	fmt.Println(string(buffer.Bytes()))
-	fmt.Println(err)
 	if err != nil {
 		return template.HTML("widget " + this.file + " " + err.Error())
 	}

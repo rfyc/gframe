@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/phper-go/frame/web/std"
+
 	"github.com/phper-go/frame/func/conv"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -165,9 +167,9 @@ func (this *DBCommand) Clone() *DBCommand {
 	return cmd
 }
 
-func (this *DBCommand) QueryRow() (map[string]string, error) {
+func (this *DBCommand) QueryRow() (map[string]std.T, error) {
 
-	var row = make(map[string]string)
+	var row = make(map[string]std.T)
 	limit := this.limit
 	this.Limit(1)
 	result, err := this.QueryRows()
@@ -199,15 +201,15 @@ func (this *DBCommand) QueryBinds(objs []interface{}) error {
 	return err
 }
 
-func (this *DBCommand) QueryRows() ([]map[string]string, error) {
+func (this *DBCommand) QueryRows() ([]map[string]std.T, error) {
 
-	var result []map[string]string
+	var result []map[string]std.T
 	rows, err := this.pdo.Query(this.Sql(), this.args...)
 	if err != nil {
 		return result, err
 	}
 	columns, err := rows.Columns()
-	values := make([]string, len(columns))
+	values := make([]interface{}, len(columns))
 	scans := make([]interface{}, len(columns))
 	for i := range values {
 		scans[i] = &values[i]
@@ -215,9 +217,9 @@ func (this *DBCommand) QueryRows() ([]map[string]string, error) {
 
 	for rows.Next() {
 		_ = rows.Scan(scans...)
-		each := make(map[string]string)
+		each := make(map[string]std.T)
 		for i, col := range values {
-			each[columns[i]] = col
+			each[columns[i]] = std.NewT(col)
 		}
 		result = append(result, each)
 	}
@@ -234,34 +236,7 @@ func (this *DBCommand) QueryCount() (int, error) {
 		return 0, err
 	}
 	this.Select(field)
-	cnt, _ := strconv.Atoi(result["cnt"])
-	return cnt, err
-}
-
-func (this *DBCommand) QueryList() ([]map[string]interface{}, error) {
-
-	var result []map[string]interface{}
-	rows, err := this.pdo.Query(this.Sql(), this.args...)
-	if err != nil {
-		return result, err
-	}
-	columns, err := rows.Columns()
-	values := make([]string, len(columns))
-	scans := make([]interface{}, len(columns))
-	for i := range values {
-		scans[i] = &values[i]
-	}
-
-	for rows.Next() {
-		_ = rows.Scan(scans...)
-		each := make(map[string]interface{})
-		for i, col := range values {
-			each[columns[i]] = col
-		}
-		result = append(result, each)
-	}
-	rows.Close()
-	return result, err
+	return result["cnt"].Int(), nil
 }
 
 func (this *DBCommand) Update(fields map[string]interface{}, condition string, args ...interface{}) (int64, error) {
@@ -319,18 +294,6 @@ func (this *DBCommand) InsertRows() {
 }
 
 func (this *DBCommand) Execute() {
-
-}
-
-func (this *DBCommand) Begin() {
-
-}
-
-func (this *DBCommand) Commit() {
-
-}
-
-func (this *DBCommand) Rollback() {
 
 }
 

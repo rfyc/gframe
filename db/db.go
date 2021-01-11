@@ -121,7 +121,7 @@ func Commit(db *sql.DB, txRun func(tx *sql.Tx, ctx ...context.Context) error) er
 	if tx, err := db.Begin(); err != nil {
 		return err
 	} else {
-		if err := txRun(tx * sql.Tx); err != nil {
+		if err := txRun(tx); err != nil {
 			return tx.Rollback()
 		} else {
 			return tx.Commit()

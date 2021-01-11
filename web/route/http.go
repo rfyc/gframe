@@ -41,8 +41,6 @@ func (this *httpRouter) ServeHTTP(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	fmt.Println(this.execController.Ctx())
-
 	this.runController()
 
 	this.endController()
