@@ -167,12 +167,12 @@ func (this *DBCommand) Clone() *DBCommand {
 	return cmd
 }
 
-func (this *DBCommand) FindOne() (map[string]std.T, error) {
+func (this *DBCommand) QueryOne() (map[string]std.T, error) {
 
 	var row = make(map[string]std.T)
 	limit := this.limit
 	this.Limit(1)
-	result, err := this.FindAll()
+	result, err := this.QueryList()
 	if err != nil {
 		return row, err
 	}
@@ -184,7 +184,7 @@ func (this *DBCommand) FindOne() (map[string]std.T, error) {
 	return row, err
 }
 
-func (this *DBCommand) FindAll([]map[string]std.T, error) {
+func (this *DBCommand) QueryList([]map[string]std.T, error) {
 
 	var result []map[string]std.T
 	rows, err := this.pdo.Query(this.Sql(), this.args...)
@@ -210,17 +210,17 @@ func (this *DBCommand) FindAll([]map[string]std.T, error) {
 	return result, err
 }
 
-func (this *DBCommand) Bind(obj interface{}) error {
+func (this *DBCommand) QueryBind(obj interface{}) error {
 
-	row, err := this.FindOne()
+	row, err := this.QueryRow()
 	if err == nil {
 		object.Set(obj, row)
 	}
 	return err
 }
 
-func (this *DBCommand) Binds(objs []interface{}) error {
-	rows, err := this.FindAll()
+func (this *DBCommand) QueryBinds(objs []interface{}) error {
+	rows, err := this.QueryRows()
 	if err != nil {
 		return err
 	}
