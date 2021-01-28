@@ -50,7 +50,8 @@ func LoadFile(obj interface{}, file string) error {
 		conf_file := conv.String(val)
 		index := strings.Index(conf_file, ".")
 		key = strings.ToLower(key)
-		if -1 != index && reflect.TypeOf(objmaps[key]).String() != "string" {
+		objVal := objmaps[key]
+		if -1 != index && objVal != nil && reflect.TypeOf(objVal).String() != "string" {
 			conf_file = dirconfig + "/" + conf_file
 			if _, err := os.Stat(conf_file); err == nil {
 				filedata, err := ioutil.ReadFile(conf_file)
