@@ -9,6 +9,25 @@ import (
 	"github.com/phper-go/frame/web/form/element"
 )
 
+func BuildForm(action, method string, elements []element.Interface, formModel ...interface{}) *Builder {
+
+	builder := &Builder{}
+
+	builder.Construct(action, method)
+
+	builder.Elements = elements
+
+	if len(formModel) > 0 {
+
+		builder.Bind(formModel[0])
+
+	}
+
+	builder.Enctype = "multipart/form-data"
+
+	return builder
+}
+
 type Builder struct {
 	Title    string
 	Method   string

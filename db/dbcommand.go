@@ -184,7 +184,7 @@ func (this *DBCommand) QueryOne() (map[string]std.T, error) {
 	return row, err
 }
 
-func (this *DBCommand) QueryList([]map[string]std.T, error) {
+func (this *DBCommand) QueryList() ([]map[string]std.T, error) {
 
 	var result []map[string]std.T
 	rows, err := this.pdo.Query(this.Sql(), this.args...)
@@ -233,7 +233,7 @@ func (this *DBCommand) QueryRow() (map[string]interface{}, error) {
 	var row = make(map[string]interface{})
 	limit := this.limit
 	this.Limit(1)
-	result, err := this.FindAll()
+	result, err := this.QueryRows()
 	if err != nil {
 		return row, err
 	}
@@ -274,7 +274,7 @@ func (this *DBCommand) QueryCount() (int, error) {
 
 	field := this.field
 	this.Select("count(1) as cnt")
-	result, err := this.QueryRow()
+	result, err := this.QueryOne()
 	if err != nil {
 		return 0, err
 	}
