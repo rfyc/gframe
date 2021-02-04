@@ -9,7 +9,7 @@ import (
 	"github.com/phper-go/frame/web/form/element"
 )
 
-func BuildForm(action, method string, elements []element.Interface, formModel ...interface{}) *Builder {
+func BuildForm(action, method string, formModel interface{}, elements []element.Interface) *Builder {
 
 	builder := &Builder{}
 
@@ -17,11 +17,7 @@ func BuildForm(action, method string, elements []element.Interface, formModel ..
 
 	builder.Elements = elements
 
-	if len(formModel) > 0 {
-
-		builder.Bind(formModel[0])
-
-	}
+	builder.Bind(formModel)
 
 	builder.Enctype = "multipart/form-data"
 

@@ -123,8 +123,7 @@ func (this *httpRouter) endController() {
 func (this *httpRouter) initController() error {
 
 	//******** request get ********//
-
-	var Ctx = ctx.NewCtxHTTP(this.response, this.request)
+	var Ctx = ctx.NewCtxHTTP(this.request, this.response)
 	var _ctx = this.execController.Ctx()
 	_ctx.Action = Ctx.Action
 	_ctx.Controller = Ctx.Controller
@@ -133,6 +132,7 @@ func (this *httpRouter) initController() error {
 	_ctx.Output = Ctx.Output
 	_ctx.Session = Ctx.Session
 	_ctx.Theme = Ctx.Theme
+	_ctx.Server = Ctx.Server
 	return sessionRead(_ctx)
 
 }

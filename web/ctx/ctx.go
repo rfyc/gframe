@@ -15,6 +15,7 @@ type Ctx struct {
 	Input      *Input
 	Output     *Output
 	Session    *session.Session
+	Server     *Server
 	Theme      theme.Interface
 }
 
@@ -25,6 +26,7 @@ func NewCtx(parent context.Context) *Ctx {
 		Input:   NewInput(),
 		Output:  NewOutput(),
 		Session: &session.Session{},
+		Server:  &Server{},
 		Theme:   &theme.Theme{},
 	}
 
@@ -34,13 +36,14 @@ func NewCtx(parent context.Context) *Ctx {
 	return ctx
 }
 
-func NewCtxHTTP(response http.ResponseWriter, request *http.Request) *Ctx {
+func NewCtxHTTP(request *http.Request, response http.ResponseWriter) *Ctx {
 
 	var ctx = &Ctx{
 		Context: request.Context(),
 		Input:   NewInputHTTP(request),
 		Output:  NewOutput(),
 		Session: &session.Session{},
+		Server:  NewServerHTTP(request),
 		Theme:   &theme.Theme{},
 	}
 

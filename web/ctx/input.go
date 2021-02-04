@@ -12,9 +12,7 @@ type Input struct {
 	Get     map[string]interface{}
 	Post    map[string]interface{}
 	Cookie  map[string]interface{}
-	Session map[string]interface{}
 	Header  map[string]interface{}
-	Server  *Server
 }
 
 func (this *Input) Bind(obj interface{}) error {
@@ -27,10 +25,8 @@ func NewInput() *Input {
 		Request: make(map[string]interface{}),
 		Get:     make(map[string]interface{}),
 		Post:    make(map[string]interface{}),
-		Cookie:  make(map[string]interface{}),
-		Session: make(map[string]interface{}),
 		Header:  make(map[string]interface{}),
-		Server:  &Server{},
+		Cookie:  make(map[string]interface{}),
 	}
 }
 
@@ -78,20 +74,25 @@ func NewInputHTTP(request *http.Request) *Input {
 		input.Cookie[cookie.Name] = cookie.Value
 	}
 
-	//******** server ********//
-	input.Server.IsHttp = true
-	input.Server.IsPost = request.Method == "POST"
-	input.Server.IsGet = request.Method == "GET"
-	input.Server.IsAjax = len(request.Header.Get("x-requested-with")) > 0
-	input.Server.RemoteAddr = request.RemoteAddr
-	input.Server.ServerName = httpServerName(request)
-	input.Server.ServerPort = httpServerPort(request)
-	input.Server.QueryPath = httpQueryPath(request)
-	input.Server.QueryString = httpQueryString(request)
-	input.Server.HttpReferer = request.Referer()
-	input.Server.HttpUserAgent = request.UserAgent()
-
 	return input
+}
+
+func NewServerHTTP(request *http.Request) *Server {
+
+	sever := &Server{}
+	sever.IsHttp = true
+	sever.IsPost = request.Method == "POST"
+	sever.IsGet = request.Method == "GET"
+	sever.IsAjax = len(request.Header.Get("x-requested-with")) > 0
+	sever.RemoteAddr = request.RemoteAddr
+	sever.ServerName = httpServerName(request)
+	sever.ServerPort = httpServerPort(request)
+	sever.QueryPath = httpQueryPath(request)
+	sever.QueryString = httpQueryString(request)
+	sever.HttpReferer = request.Referer()
+	sever.HttpUserAgent = request.UserAgent()
+
+	return sever
 }
 
 func httpQueryString(request *http.Request) string {
